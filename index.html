@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalshi Order Launcher</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222;
+    --border: #2e2e2e;
+    --border2: #3a3a3a;
+    --text: #e8e8e8;
+    --muted: #888;
+    --accent: #00d4aa;
+    --accent-dim: rgba(0,212,170,0.12);
+    --accent-border: rgba(0,212,170,0.3);
+    --danger: #ff5555;
+    --danger-dim: rgba(255,85,85,0.12);
+    --warn: #ffaa33;
+    --warn-dim: rgba(255,170,51,0.12);
+    --yes-color: #00d4aa;
+    --no-color: #ff6b6b;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .env-badge {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--warn-dim);
+    color: var(--warn);
+    border: 1px solid rgba(255,170,51,0.25);
+  }
+
+  .env-badge.demo { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+
+  .main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .full-width { grid-column: 1 / -1; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,170,0.12);
+  }
+
+  select option { background: #1a1a1a; }
+
+  input[type="password"] { font-family: var(--mono); letter-spacing: 2px; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .field-row.three { grid-template-columns: 2fr 1fr 1fr; }
+  .field-row.four  { grid-template-columns: 2fr 1fr 1fr 1fr; }
+
+  .field { margin-bottom: 12px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .btn:hover { background: #2a2a2a; border-color: #444; }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-accent {
+    background: var(--accent);
+    color: #000;
+    border-color: transparent;
+    font-weight: 600;
+  }
+
+  .btn-accent:hover { background: #00efc0; border-color: transparent; }
+
+  .btn-danger { background: var(--danger-dim); color: var(--danger); border-color: rgba(255,85,85,0.25); }
+  .btn-danger:hover { background: rgba(255,85,85,0.2); }
+
+  .btn-small { padding: 5px 10px; font-size: 12px; }
+
+  .btn-fire {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    border-radius: var(--radius-lg);
+    background: var(--accent);
+    color: #000;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-fire:hover:not(:disabled) { background: #00efc0; transform: translateY(-1px); }
+  .btn-fire:active:not(:disabled) { transform: scale(0.99); }
+  .btn-fire:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-fire.firing { animation: pulse 0.8s ease-in-out infinite; }
+
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+
+  .order-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .order-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: center;
+    transition: border-color 0.15s;
+  }
+
+  .order-item:hover { border-color: var(--border2); }
+  .order-item.pending { border-left: 3px solid var(--border2); }
+  .order-item.success { border-left: 3px solid var(--accent); }
+  .order-item.error   { border-left: 3px solid var(--danger); }
+  .order-item.loading { border-left: 3px solid var(--warn); animation: pulse 0.8s infinite; }
+
+  .order-ticker {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  .order-meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .side-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 6px;
+  }
+
+  .side-yes { background: rgba(0,212,170,0.15); color: var(--yes-color); }
+  .side-no  { background: rgba(255,107,107,0.15); color: var(--no-color); }
+
+  .order-actions { display: flex; gap: 6px; align-items: center; }
+
+  .status-icon { font-size: 16px; }
+
+  .log-area {
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.8;
+    max-height: 200px;
+    overflow-y: auto;
+    color: var(--muted);
+  }
+
+  .log-line { display: block; }
+  .log-success { color: var(--accent); }
+  .log-error { color: var(--danger); }
+  .log-warn { color: var(--warn); }
+  .log-info { color: #888; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  .summary-bar {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+  }
+
+  .summary-stat { display: flex; align-items: center; gap: 5px; }
+  .stat-val { font-weight: 600; color: var(--text); font-family: var(--mono); }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .empty-state .icon { font-size: 28px; margin-bottom: 8px; opacity: 0.4; }
+
+  .toggle-creds {
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+
+  .toggle-creds:hover { color: var(--text); }
+
+  .creds-saved {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .price-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .bundle-name-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .bundle-name-row input { flex: 1; }
+
+  #saveCredsBtn { margin-top: 12px; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    width: 480px;
+    max-width: 95vw;
+  }
+
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+
+  .confirm-list {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 16px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  .confirm-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .confirm-row:last-child { border-bottom: none; }
+
+  .confirm-actions { display: flex; gap: 10px; margin-top: 4px; }
+
+  .warn-box {
+    background: var(--warn-dim);
+    border: 1px solid rgba(255,170,51,0.25);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--warn);
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Kalshi Order Launcher
+  </div>
+  <span class="env-badge" id="envBadge">LIVE</span>
+</header>
+
+<div class="main">
+
+  <!-- Credentials -->
+  <div class="card full-width" id="credsCard">
+    <div class="card-header">
+      <span class="card-title">API Credentials</span>
+      <button class="toggle-creds" onclick="toggleCreds()">hide</button>
+    </div>
+    <div id="credsForm">
+      <div class="field-row">
+        <div class="field">
+          <label>API Key ID</label>
+          <input type="text" id="apiKeyId" placeholder="00000000-0000-0000-0000-000000000000" />
+        </div>
+        <div class="field">
+          <label>Private Key (RSA PEM or API Secret)</label>
+          <input type="password" id="privateKey" placeholder="Paste your private key or API secret" />
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn btn-accent btn-small" id="saveCredsBtn" onclick="saveCreds()">Save credentials</button>
+        <button class="btn btn-small" onclick="testAuth()">Test connection</button>
+        <span id="authStatus" style="font-size:12px; color:var(--muted);"></span>
+      </div>
+    </div>
+    <div id="credsSaved" style="display:none;" class="creds-saved">
+      <span>✓</span> Credentials loaded from storage
+    </div>
+  </div>
+
+  <!-- Add Order -->
+  <div class="card full-width">
+    <div class="card-header">
+      <span class="card-title">Add Order to Bundle</span>
+    </div>
+
+    <div class="field-row four">
+      <div class="field">
+        <label>Market Ticker</label>
+        <input type="text" id="newTicker" placeholder="e.g. INXD-23DEC29-B4900" style="text-transform:uppercase;" />
+      </div>
+      <div class="field">
+        <label>Side</label>
+        <select id="newSide">
+          <option value="yes">YES</option>
+          <option value="no">NO</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Price (¢)</label>
+        <input type="number" id="newPrice" placeholder="50" min="1" max="99" step="1" />
+        <div class="price-note">1–99 cents per contract</div>
+      </div>
+      <div class="field">
+        <label>Contracts</label>
+        <input type="number" id="newCount" placeholder="10" min="1" step="1" />
+      </div>
+    </div>
+
+    <button class="btn btn-accent" onclick="addOrder()">+ Add to bundle</button>
+  </div>
+
+  <!-- Bundle -->
+  <div class="card full-width">
+    <div class="card-header">
+      <span class="card-title">Order Bundle</span>
+      <button class="btn btn-small btn-danger" onclick="clearBundle()" id="clearBtn" style="display:none;">Clear all</button>
+    </div>
+
+    <div id="bundleSummary" class="summary-bar" style="display:none;">
+      <div class="summary-stat"><span>Orders:</span><span class="stat-val" id="statCount">0</span></div>
+      <div class="summary-stat"><span>Total contracts:</span><span class="stat-val" id="statContracts">0</span></div>
+      <div class="summary-stat"><span>Max cost:</span><span class="stat-val" id="statCost">$0.00</span></div>
+    </div>
+
+    <div id="orderList" class="order-list">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        No orders in bundle yet. Add some above.
+      </div>
+    </div>
+
+    <hr class="divider" id="fireDivider" style="display:none;">
+
+    <button class="btn-fire" id="fireBtn" style="display:none;" onclick="confirmFire()">
+      <span>⚡</span>
+      <span id="fireBtnText">Fire All Orders</span>
+    </button>
+  </div>
+
+  <!-- Log -->
+  <div class="card full-width" id="logCard" style="display:none;">
+    <div class="card-header">
+      <span class="card-title">Execution Log</span>
+      <button class="btn btn-small" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="log-area" id="logArea"></div>
+  </div>
+
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-title">Confirm Order Bundle</div>
+    <div class="warn-box">⚠ These are live orders on Kalshi. Confirm before sending.</div>
+    <div class="confirm-list" id="confirmList"></div>
+    <div class="confirm-actions">
+      <button class="btn-fire" id="confirmFireBtn" onclick="fireOrders()" style="padding:10px 20px; font-size:13px; font-weight:600; width:auto; flex:1;">
+        Send All Orders
+      </button>
+      <button class="btn" onclick="closeModal()" style="padding:10px 20px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KALSHI_API = 'https://trading-api.kalshi.com/trade-api/v2';
+let orders = [];
+let creds = { keyId: '', privateKey: '' };
+
+function loadFromStorage() {
+  const saved = localStorage.getItem('kalshi_creds');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    creds = parsed;
+    document.getElementById('apiKeyId').value = parsed.keyId;
+    document.getElementById('privateKey').value = parsed.privateKey;
+    document.getElementById('credsSaved').style.display = 'flex';
+  }
+  const savedOrders = localStorage.getItem('kalshi_bundle');
+  if (savedOrders) {
+    orders = JSON.parse(savedOrders);
+    renderOrders();
+  }
+}
+
+function saveCreds() {
+  const keyId = document.getElementById('apiKeyId').value.trim();
+  const pk = document.getElementById('privateKey').value.trim();
+  if (!keyId || !pk) { setAuthStatus('Enter both fields', 'error'); return; }
+  creds = { keyId, privateKey: pk };
+  localStorage.setItem('kalshi_creds', JSON.stringify(creds));
+  setAuthStatus('Saved', 'success');
+}
+
+function toggleCreds() {
+  const form = document.getElementById('credsForm');
+  const btn = document.querySelector('.toggle-creds');
+  const hidden = form.style.display === 'none';
+  form.style.display = hidden ? 'block' : 'none';
+  btn.textContent = hidden ? 'hide' : 'show';
+}
+
+function setAuthStatus(msg, type) {
+  const el = document.getElementById('authStatus');
+  el.textContent = msg;
+  el.style.color = type === 'success' ? 'var(--accent)' : type === 'error' ? 'var(--danger)' : 'var(--muted)';
+  setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3000);
+}
+
+async function makeRequest(method, path, body = null) {
+  const ts = Date.now().toString();
+  const nonce = Math.random().toString(36).substring(2);
+  const msgStr = ts + nonce + method.toUpperCase() + path;
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'KALSHI-ACCESS-KEY': creds.keyId,
+    'KALSHI-ACCESS-TIMESTAMP': ts,
+    'KALSHI-ACCESS-SIGNATURE': await signMessage(msgStr),
+  };
+
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(KALSHI_API + path, opts);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message || json.error || `HTTP ${res.status}`);
+  return json;
+}
+
+async function signMessage(msg) {
+  const pk = creds.privateKey.trim();
+
+  if (pk.includes('BEGIN') && pk.includes('PRIVATE KEY')) {
+    return signWithPEM(pk, msg);
+  }
+  const msgBytes = new TextEncoder().encode(msg);
+  const keyBytes = base64ToBytes(pk);
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, msgBytes);
+  return bytesToBase64(new Uint8Array(sig));
+}
+
+async function signWithPEM(pem, msg) {
+  const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s/g, '');
+  const keyDer = base64ToBytes(b64);
+  const key = await crypto.subtle.importKey('pkcs8', keyDer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const msgBytes = new TextEncoder().encode(msg);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, msgBytes);
+  return bytesToBase64(new Uint8Array(sig));
+}
+
+function base64ToBytes(b64) {
+  const bin = atob(b64);
+  return Uint8Array.from(bin, c => c.charCodeAt(0));
+}
+
+function bytesToBase64(bytes) {
+  return btoa(String.fromCharCode(...bytes));
+}
+
+async function testAuth() {
+  setAuthStatus('Testing...', 'info');
+  try {
+    await makeRequest('GET', '/portfolio/balance');
+    setAuthStatus('Connected ✓', 'success');
+  } catch (e) {
+    setAuthStatus('Failed: ' + e.message, 'error');
+  }
+}
+
+function addOrder() {
+  const ticker = document.getElementById('newTicker').value.trim().toUpperCase();
+  const side   = document.getElementById('newSide').value;
+  const price  = parseInt(document.getElementById('newPrice').value);
+  const count  = parseInt(document.getElementById('newCount').value);
+
+  if (!ticker) { alert('Enter a market ticker'); return; }
+  if (!price || price < 1 || price > 99) { alert('Price must be 1–99 cents'); return; }
+  if (!count || count < 1) { alert('Enter at least 1 contract'); return; }
+
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  orders.push({ id, ticker, side, price, count, status: 'pending', orderId: null, error: null });
+  localStorage.setItem('kalshi_bundle', JSON.stringify(orders));
+  renderOrders();
+
+  document.getElementById('newTicker').value = '';
+  document.getElementById('newPrice').value = '';
+  document.getElementById('newCount').value = '';
+  document.getElementById('newTicker').focus();
+}
+
+function removeOrder(id) {
+  orders = orders.filter(o => o.id !== id);
+  localStorage.setItem('kalshi_bundle', JSON.stringify(orders));
+  renderOrders();
+}
+
+function renderOrders() {
+  const list = document.getElementById('orderList');
+  const fireBtn = document.getElementById('fireBtn');
+  const fireDivider = document.getElementById('fireDivider');
+  const clearBtn = document.getElementById('clearBtn');
+  const summary = document.getElementById('bundleSummary');
+
+  if (orders.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div>No orders in bundle yet. Add some above.</div>';
+    fireBtn.style.display = 'none';
+    fireDivider.style.display = 'none';
+    clearBtn.style.display = 'none';
+    summary.style.display = 'none';
+    return;
+  }
+
+  fireBtn.style.display = 'flex';
+  fireDivider.style.display = 'block';
+  clearBtn.style.display = 'inline-flex';
+  summary.style.display = 'flex';
+
+  const totalContracts = orders.reduce((s, o) => s + o.count, 0);
+  const maxCost = orders.reduce((s, o) => s + (o.count * o.price / 100), 0);
+  document.getElementById('statCount').textContent = orders.length;
+  document.getElementById('statContracts').textContent = totalContracts;
+  document.getElementById('statCost').textContent = '$' + maxCost.toFixed(2);
+
+  const statusIcon = { pending: '○', loading: '⟳', success: '✓', error: '✕' };
+  const statusColor = { pending: 'var(--muted)', loading: 'var(--warn)', success: 'var(--accent)', error: 'var(--danger)' };
+
+  list.innerHTML = orders.map(o => `
+    <div class="order-item ${o.status}" id="oi-${o.id}">
+      <div>
+        <div>
+          <span class="side-badge side-${o.side}">${o.side}</span>
+          <span class="order-ticker">${o.ticker}</span>
+        </div>
+        <div class="order-meta">
+          ${o.count} contract${o.count > 1 ? 's' : ''} @ ${o.price}¢ — max cost $${(o.count * o.price / 100).toFixed(2)}
+          ${o.orderId ? `<span style="color:var(--accent)"> · ID: ${o.orderId}</span>` : ''}
+          ${o.error   ? `<span style="color:var(--danger)"> · ${o.error}</span>` : ''}
+        </div>
+      </div>
+      <div class="order-actions">
+        <span class="status-icon" style="color:${statusColor[o.status]}">${statusIcon[o.status]}</span>
+        ${o.status === 'pending' ? `<button class="btn btn-small btn-danger" onclick="removeOrder('${o.id}')">✕</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearBundle() {
+  if (orders.some(o => o.status !== 'pending') && !confirm('Clear all orders including results?')) return;
+  orders = [];
+  localStorage.removeItem('kalshi_bundle');
+  renderOrders();
+}
+
+function confirmFire() {
+  if (!creds.keyId || !creds.privateKey) {
+    alert('Set your API credentials first.');
+    return;
+  }
+  const pending = orders.filter(o => o.status === 'pending');
+  if (pending.length === 0) { alert('No pending orders to fire.'); return; }
+
+  const list = document.getElementById('confirmList');
+  list.innerHTML = pending.map(o => `
+    <div class="confirm-row">
+      <div>
+        <span class="side-badge side-${o.side}">${o.side}</span>
+        <strong>${o.ticker}</strong>
+      </div>
+      <div style="text-align:right; font-size:12px; color:var(--muted);">
+        ${o.count} × ${o.price}¢ = <strong style="color:var(--text)">$${(o.count * o.price / 100).toFixed(2)}</strong>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('confirmModal').classList.remove('open');
+}
+
+async function fireOrders() {
+  closeModal();
+  const pending = orders.filter(o => o.status === 'pending');
+  if (pending.length === 0) return;
+
+  document.getElementById('logCard').style.display = 'block';
+  const fireBtn = document.getElementById('fireBtn');
+  const fireBtnText = document.getElementById('fireBtnText');
+  fireBtn.disabled = true;
+  fireBtn.classList.add('firing');
+  fireBtnText.textContent = `Firing ${pending.length} orders...`;
+
+  log(`Firing ${pending.length} orders simultaneously`, 'info');
+
+  const promises = pending.map(o => placeOrder(o));
+  const results = await Promise.allSettled(promises);
+
+  const succeeded = results.filter(r => r.status === 'fulfilled' && r.value?.ok).length;
+  const failed    = results.length - succeeded;
+
+  log(`Done — ${succeeded} succeeded, ${failed} failed`, succeeded === results.length ? 'success' : 'warn');
+
+  fireBtn.disabled = false;
+  fireBtn.classList.remove('firing');
+  fireBtnText.textContent = 'Fire All Orders';
+  renderOrders();
+}
+
+async function placeOrder(order) {
+  order.status = 'loading';
+  renderOrders();
+
+  try {
+    log(`→ ${order.side.toUpperCase()} ${order.ticker} ${order.count}@${order.price}¢`, 'info');
+
+    const body = {
+      ticker: order.ticker,
+      action: 'buy',
+      type: 'limit',
+      side: order.side,
+      count: order.count,
+      yes_price: order.side === 'yes' ? order.price : undefined,
+      no_price:  order.side === 'no'  ? order.price : undefined,
+      client_order_id: 'kol-' + order.id,
+    };
+
+    if (body.yes_price === undefined) delete body.yes_price;
+    if (body.no_price  === undefined) delete body.no_price;
+
+    const res = await makeRequest('POST', '/portfolio/orders', body);
+    order.status = 'success';
+    order.orderId = res.order?.order_id || res.order_id || '–';
+    log(`✓ ${order.ticker} → ${order.orderId}`, 'success');
+    return { ok: true };
+  } catch (e) {
+    order.status = 'error';
+    order.error = e.message;
+    log(`✕ ${order.ticker}: ${e.message}`, 'error');
+    return { ok: false };
+  }
+}
+
+function log(msg, type = 'info') {
+  const area = document.getElementById('logArea');
+  const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+  const line = document.createElement('span');
+  line.className = `log-line log-${type}`;
+  line.textContent = `[${ts}] ${msg}`;
+  area.appendChild(line);
+  area.appendChild(document.createElement('br'));
+  area.scrollTop = area.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('logArea').innerHTML = '';
+}
+
+document.getElementById('newTicker').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('newPrice').focus();
+});
+document.getElementById('newPrice').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('newCount').focus();
+});
+document.getElementById('newCount').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addOrder();
+});
+
+loadFromStorage();
+</script>
+</body>
+</html>
