@@ -848,78 +848,20 @@
 
 <script>
 // ─── CONFIG ───
-const API = 'https://trading-api.kalshi.com/trade-api/v2';
-let creds = { keyId: '', privateKey: '' };
+// All API calls go through the local server proxy at /kalshi/*
+// The server handles authentication and signing
 let currentSide = 'yes';
 let modalAction = null;
 
-// ─── AUTH / API ───
-async function loadCreds() {
-  try {
-    const res = await fetch('/api/creds');
-    const data = await res.json();
-    if (data.keyId && data.privateKey) {
-      creds = data;
-      return true;
-    }
-  } catch (e) {}
-  const saved = localStorage.getItem('kalshi_creds');
-  if (saved) {
-    creds = JSON.parse(saved);
-    return true;
-  }
-  return false;
-}
-
+// ─── API ───
 async function makeRequest(method, path, body = null) {
-  const ts = Date.now().toString();
-  const nonce = Math.random().toString(36).substring(2);
-  const msgStr = ts + nonce + method.toUpperCase() + path;
-
-  const headers = {
-    'Content-Type': 'application/json',
-    'KALSHI-ACCESS-KEY': creds.keyId,
-    'KALSHI-ACCESS-TIMESTAMP': ts,
-    'KALSHI-ACCESS-SIGNATURE': await signMessage(msgStr),
-  };
-
-  const opts = { method, headers };
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
 
-  const res = await fetch(API + path, opts);
+  const res = await fetch('/kalshi' + path, opts);
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || json.error || `HTTP ${res.status}`);
   return json;
-}
-
-async function signMessage(msg) {
-  const pk = creds.privateKey.trim();
-  if (pk.includes('BEGIN') && pk.includes('PRIVATE KEY')) {
-    return signWithPEM(pk, msg);
-  }
-  const msgBytes = new TextEncoder().encode(msg);
-  const keyBytes = base64ToBytes(pk);
-  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, msgBytes);
-  return bytesToBase64(new Uint8Array(sig));
-}
-
-async function signWithPEM(pem, msg) {
-  const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s/g, '');
-  const keyDer = base64ToBytes(b64);
-  const key = await crypto.subtle.importKey('pkcs8', keyDer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
-  const msgBytes = new TextEncoder().encode(msg);
-  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, msgBytes);
-  return bytesToBase64(new Uint8Array(sig));
-}
-
-function base64ToBytes(b64) {
-  const bin = atob(b64);
-  return Uint8Array.from(bin, c => c.charCodeAt(0));
-}
-
-function bytesToBase64(bytes) {
-  return btoa(String.fromCharCode(...bytes));
 }
 
 // ─── PORTFOLIO ───
@@ -1306,14 +1248,8 @@ document.addEventListener('keydown', e => {
 
 async function initApp() {
   setStatus('connecting');
-  const hasCreds = await loadCreds();
-  if (hasCreds) {
-    loadPortfolio();
-    loadOrders();
-  } else {
-    setStatus('disconnected');
-    toast('No API credentials configured', 'error');
-  }
+  loadPortfolio();
+  loadOrders();
 }
 
 // Resume session
