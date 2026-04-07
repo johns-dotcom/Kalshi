@@ -536,14 +536,28 @@ const KALSHI_API = 'https://trading-api.kalshi.com/trade-api/v2';
 let orders = [];
 let creds = { keyId: '', privateKey: '' };
 
-function loadFromStorage() {
-  const saved = localStorage.getItem('kalshi_creds');
-  if (saved) {
-    const parsed = JSON.parse(saved);
-    creds = parsed;
-    document.getElementById('apiKeyId').value = parsed.keyId;
-    document.getElementById('privateKey').value = parsed.privateKey;
-    document.getElementById('credsSaved').style.display = 'flex';
+async function loadFromStorage() {
+  // Load credentials from server (Railway env vars)
+  try {
+    const res = await fetch('/api/creds');
+    const data = await res.json();
+    if (data.keyId && data.privateKey) {
+      creds = data;
+      document.getElementById('apiKeyId').value = data.keyId;
+      document.getElementById('privateKey').value = data.privateKey;
+      document.getElementById('credsSaved').style.display = 'flex';
+      document.getElementById('credsCard').style.display = 'none';
+    }
+  } catch (e) {
+    // Fall back to localStorage if server unavailable
+    const saved = localStorage.getItem('kalshi_creds');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      creds = parsed;
+      document.getElementById('apiKeyId').value = parsed.keyId;
+      document.getElementById('privateKey').value = parsed.privateKey;
+      document.getElementById('credsSaved').style.display = 'flex';
+    }
   }
   const savedOrders = localStorage.getItem('kalshi_bundle');
   if (savedOrders) {
