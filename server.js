@@ -5,7 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
-const KALSHI_BASE = 'https://trading-api.kalshi.com';
+const KALSHI_BASE = 'https://api.elections.kalshi.com';
 const KEY_ID = process.env.KALSHI_API_KEY_ID || '';
 const PRIVATE_KEY = process.env.KALSHI_PRIVATE_KEY || '';
 
