@@ -1,4 +1,4 @@
-const CACHE = 'kalshi-v1';
+const CACHE = 'kalshi-v2';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -17,6 +17,9 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  // Never cache API/proxy routes
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/kalshi/')) return;
   e.respondWith(
     fetch(e.request)
       .then(res => {
