@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalshi Order Launcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kalshi">
+<meta name="theme-color" content="#0f0f0f">
+<link rel="manifest" href="manifest.json">
+<title>Kalshi</title>
 <style>
   :root {
     --bg: #0f0f0f;
@@ -36,13 +41,157 @@
     font-size: 14px;
     line-height: 1.5;
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow-x: hidden;
   }
+
+  /* ─── LOCK SCREEN ─── */
+  #lockScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--bg);
+    padding: 40px 20px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .lock-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(0,212,170,0.12);
+    border: 2px solid rgba(0,212,170,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .lock-logo-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  .lock-title {
+    font-size: 20px;
+    font-weight: 300;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .lock-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .passcode-dots {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 36px;
+    height: 14px;
+  }
+
+  .passcode-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    background: transparent;
+    transition: background 0.1s, border-color 0.1s, transform 0.1s;
+  }
+
+  .passcode-dot.filled {
+    background: var(--text);
+    border-color: var(--text);
+  }
+
+  .passcode-dots.error .passcode-dot {
+    border-color: var(--danger);
+    background: transparent;
+    animation: dotShake 0.4s ease-in-out;
+  }
+
+  @keyframes dotShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+
+  .numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 80px);
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .numpad-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    font-size: 32px;
+    font-weight: 300;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .numpad-btn:active { background: rgba(255,255,255,0.2); }
+
+  .numpad-btn .sub {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-top: 1px;
+    font-weight: 500;
+  }
+
+  .numpad-btn.empty { border: none; background: none; cursor: default; }
+
+  .numpad-btn.delete {
+    border: none;
+    background: none;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    color: var(--text);
+  }
+
+  .numpad-btn.delete:active { opacity: 0.5; background: none; }
+
+  @media (max-height: 700px) {
+    .numpad { gap: 10px; }
+    .numpad-btn { width: 68px; height: 68px; font-size: 28px; }
+    .passcode-dots { margin-bottom: 24px; }
+  }
+
+  /* ─── APP SHELL ─── */
+  #appWrapper { display: none; min-height: 100vh; min-height: 100dvh; display: none; flex-direction: column; }
 
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 0 24px;
+    padding: 0 20px;
     height: 56px;
     display: flex;
     align-items: center;
@@ -52,14 +201,7 @@
     z-index: 100;
   }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    font-size: 15px;
-    letter-spacing: -0.3px;
-  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
 
   .logo-dot {
     width: 8px;
@@ -67,55 +209,226 @@
     border-radius: 50%;
     background: var(--accent);
     box-shadow: 0 0 8px var(--accent);
+    transition: background 0.3s, box-shadow 0.3s;
   }
 
-  .env-badge {
-    font-size: 11px;
+  .logo-dot.disconnected { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+  .logo-dot.connecting { background: var(--warn); box-shadow: 0 0 8px var(--warn); animation: pulse 1s infinite; }
+
+  .header-title { font-weight: 600; font-size: 15px; letter-spacing: -0.3px; }
+
+  .header-balance {
+    font-family: var(--mono);
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: var(--warn-dim);
-    color: var(--warn);
-    border: 1px solid rgba(255,170,51,0.25);
+    color: var(--accent);
   }
 
-  .env-badge.demo { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
 
-  .main {
-    max-width: 960px;
+  /* ─── TAB BAR ─── */
+  .tab-bar {
+    display: flex;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 10px 0 8px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 10px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s;
+  }
+
+  .tab-btn.active { color: var(--accent); }
+  .tab-btn .tab-icon { font-size: 22px; line-height: 1; }
+
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    padding-bottom: 80px;
+    max-width: 600px;
     margin: 0 auto;
-    padding: 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    width: 100%;
   }
 
-  .full-width { grid-column: 1 / -1; }
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
 
+  /* ─── CARDS ─── */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
   }
 
   .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .card-title {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     color: var(--muted);
   }
 
+  /* ─── BALANCE CARD ─── */
+  .balance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .balance-item { text-align: center; }
+
+  .balance-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .balance-value {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .balance-value.positive { color: var(--accent); }
+  .balance-value.negative { color: var(--danger); }
+
+  /* ─── POSITIONS ─── */
+  .position-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+
+  .position-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+
+  .position-ticker {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.3px;
+    word-break: break-all;
+  }
+
+  .position-pnl {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    margin-left: 10px;
+  }
+
+  .position-details {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+
+  .position-detail span { color: var(--text); font-weight: 500; }
+
+  .side-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .side-yes { background: rgba(0,212,170,0.15); color: var(--yes-color); }
+  .side-no  { background: rgba(255,107,107,0.15); color: var(--no-color); }
+
+  /* ─── ORDERS ─── */
+  .order-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+
+  .order-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .order-ticker {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .order-status {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .order-status.resting { background: var(--accent-dim); color: var(--accent); }
+  .order-status.canceled, .order-status.cancelled { background: var(--danger-dim); color: var(--danger); }
+  .order-status.executed { background: rgba(0,212,170,0.2); color: var(--accent); }
+  .order-status.pending { background: var(--warn-dim); color: var(--warn); }
+
+  .order-details {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+
+  .order-details span { color: var(--text); font-weight: 500; }
+
+  .order-actions-row { margin-top: 8px; }
+
+  /* ─── TRADE FORM ─── */
   label {
     display: block;
     font-size: 12px;
@@ -130,11 +443,12 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--text);
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 10px 12px;
+    font-size: 15px;
     font-family: inherit;
     transition: border-color 0.15s;
     outline: none;
+    -webkit-appearance: none;
   }
 
   input:focus, select:focus {
@@ -144,19 +458,40 @@
 
   select option { background: #1a1a1a; }
 
-  input[type="password"] { font-family: var(--mono); letter-spacing: 2px; }
+  .field { margin-bottom: 14px; }
 
   .field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
 
-  .field-row.three { grid-template-columns: 2fr 1fr 1fr; }
-  .field-row.four  { grid-template-columns: 2fr 1fr 1fr 1fr; }
+  .side-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
 
-  .field { margin-bottom: 12px; }
+  .side-toggle-btn {
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface2);
+    color: var(--muted);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .side-toggle-btn.active-yes { background: rgba(0,212,170,0.15); color: var(--yes-color); }
+  .side-toggle-btn.active-no { background: rgba(255,107,107,0.15); color: var(--no-color); }
 
   .btn {
     display: inline-flex;
@@ -173,9 +508,9 @@
     border: 1px solid var(--border2);
     background: var(--surface2);
     color: var(--text);
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .btn:hover { background: #2a2a2a; border-color: #444; }
   .btn:active { transform: scale(0.98); }
 
   .btn-accent {
@@ -185,169 +520,86 @@
     font-weight: 600;
   }
 
-  .btn-accent:hover { background: #00efc0; border-color: transparent; }
-
   .btn-danger { background: var(--danger-dim); color: var(--danger); border-color: rgba(255,85,85,0.25); }
-  .btn-danger:hover { background: rgba(255,85,85,0.2); }
 
   .btn-small { padding: 5px 10px; font-size: 12px; }
 
-  .btn-fire {
+  .btn-full {
     width: 100%;
     padding: 14px;
     font-size: 15px;
     font-weight: 700;
-    letter-spacing: -0.3px;
     border-radius: var(--radius-lg);
     background: var(--accent);
     color: #000;
     border: none;
     cursor: pointer;
     transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .btn-fire:hover:not(:disabled) { background: #00efc0; transform: translateY(-1px); }
-  .btn-fire:active:not(:disabled) { transform: scale(0.99); }
-  .btn-fire:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-  .btn-fire.firing { animation: pulse 0.8s ease-in-out infinite; }
+  .btn-full:active:not(:disabled) { transform: scale(0.98); }
+  .btn-full:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
-
-  .order-list { display: flex; flex-direction: column; gap: 8px; }
-
-  .order-item {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    align-items: center;
-    transition: border-color 0.15s;
+  .btn-full.sell {
+    background: var(--danger);
   }
 
-  .order-item:hover { border-color: var(--border2); }
-  .order-item.pending { border-left: 3px solid var(--border2); }
-  .order-item.success { border-left: 3px solid var(--accent); }
-  .order-item.error   { border-left: 3px solid var(--danger); }
-  .order-item.loading { border-left: 3px solid var(--warn); animation: pulse 0.8s infinite; }
-
-  .order-ticker {
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.5px;
-  }
-
-  .order-meta {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .side-badge {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-right: 6px;
-  }
-
-  .side-yes { background: rgba(0,212,170,0.15); color: var(--yes-color); }
-  .side-no  { background: rgba(255,107,107,0.15); color: var(--no-color); }
-
-  .order-actions { display: flex; gap: 6px; align-items: center; }
-
-  .status-icon { font-size: 16px; }
-
-  .log-area {
-    background: #0a0a0a;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+  .trade-cost {
+    text-align: center;
     padding: 12px;
-    font-family: var(--mono);
-    font-size: 11px;
-    line-height: 1.8;
-    max-height: 200px;
-    overflow-y: auto;
-    color: var(--muted);
-  }
-
-  .log-line { display: block; }
-  .log-success { color: var(--accent); }
-  .log-error { color: var(--danger); }
-  .log-warn { color: var(--warn); }
-  .log-info { color: #888; }
-
-  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-
-  .summary-bar {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    font-size: 12px;
-    color: var(--muted);
-    padding: 10px 14px;
+    margin-bottom: 14px;
     background: var(--surface2);
     border-radius: var(--radius);
-    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--muted);
   }
 
-  .summary-stat { display: flex; align-items: center; gap: 5px; }
-  .stat-val { font-weight: 600; color: var(--text); font-family: var(--mono); }
+  .trade-cost .cost-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    margin-top: 4px;
+  }
 
+  /* ─── EMPTY & LOADING ─── */
   .empty-state {
     text-align: center;
-    padding: 32px;
+    padding: 40px 20px;
     color: var(--muted);
     font-size: 13px;
   }
 
-  .empty-state .icon { font-size: 28px; margin-bottom: 8px; opacity: 0.4; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.4; }
 
-  .toggle-creds {
-    font-size: 11px;
-    color: var(--muted);
-    cursor: pointer;
-    text-decoration: underline;
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 20px auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .refresh-btn {
     background: none;
     border: none;
-    padding: 0;
-    font-family: inherit;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.3s;
   }
 
-  .toggle-creds:hover { color: var(--text); }
+  .refresh-btn.spinning { animation: spin 0.6s linear infinite; }
 
-  .creds-saved {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--accent);
-  }
-
-  .price-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
-  .bundle-name-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-
-  .bundle-name-row input { flex: 1; }
-
-  #saveCredsBtn { margin-top: 12px; }
-
+  /* ─── MODAL ─── */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -356,6 +608,7 @@
     z-index: 200;
     align-items: center;
     justify-content: center;
+    padding: 20px;
   }
 
   .modal-overlay.open { display: flex; }
@@ -365,34 +618,15 @@
     border: 1px solid var(--border2);
     border-radius: var(--radius-lg);
     padding: 24px;
-    width: 480px;
-    max-width: 95vw;
+    width: 100%;
+    max-width: 420px;
   }
 
   .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
 
-  .confirm-list {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px;
-    margin-bottom: 16px;
-    max-height: 280px;
-    overflow-y: auto;
-  }
+  .modal-body { margin-bottom: 16px; font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-  .confirm-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-  }
-
-  .confirm-row:last-child { border-bottom: none; }
-
-  .confirm-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .modal-body strong { color: var(--text); }
 
   .warn-box {
     background: var(--warn-dim);
@@ -403,191 +637,238 @@
     color: var(--warn);
     margin-bottom: 16px;
   }
+
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-actions .btn-full { flex: 1; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-size: 13px;
+    z-index: 300;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--accent-border); color: var(--accent); }
+  .toast.error { border-color: rgba(255,85,85,0.3); color: var(--danger); }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-dot"></div>
-    Kalshi Order Launcher
+<!-- ─── LOCK SCREEN ─── -->
+<div id="lockScreen">
+  <div class="lock-logo"><div class="lock-logo-dot"></div></div>
+  <div class="lock-title">Kalshi</div>
+  <div class="lock-sub">Enter Passcode</div>
+  <div class="passcode-dots" id="passcodeDots">
+    <div class="passcode-dot"></div>
+    <div class="passcode-dot"></div>
+    <div class="passcode-dot"></div>
+    <div class="passcode-dot"></div>
+    <div class="passcode-dot"></div>
+    <div class="passcode-dot"></div>
   </div>
-  <span class="env-badge" id="envBadge">LIVE</span>
+  <div class="numpad" id="numpad">
+    <button class="numpad-btn" data-key="1"><span>1</span></button>
+    <button class="numpad-btn" data-key="2"><span>2</span><span class="sub">A B C</span></button>
+    <button class="numpad-btn" data-key="3"><span>3</span><span class="sub">D E F</span></button>
+    <button class="numpad-btn" data-key="4"><span>4</span><span class="sub">G H I</span></button>
+    <button class="numpad-btn" data-key="5"><span>5</span><span class="sub">J K L</span></button>
+    <button class="numpad-btn" data-key="6"><span>6</span><span class="sub">M N O</span></button>
+    <button class="numpad-btn" data-key="7"><span>7</span><span class="sub">P Q R S</span></button>
+    <button class="numpad-btn" data-key="8"><span>8</span><span class="sub">T U V</span></button>
+    <button class="numpad-btn" data-key="9"><span>9</span><span class="sub">W X Y Z</span></button>
+    <div class="numpad-btn empty"></div>
+    <button class="numpad-btn" data-key="0"><span>0</span></button>
+    <button class="numpad-btn delete" id="deleteBtn">Delete</button>
+  </div>
+</div>
+
+<!-- ─── APP ─── -->
+<div id="appWrapper">
+
+<header>
+  <div class="header-left">
+    <div class="logo-dot" id="statusDot"></div>
+    <span class="header-title">Kalshi</span>
+  </div>
+  <span class="header-balance" id="headerBalance">--</span>
 </header>
 
-<div class="main">
+<div class="tab-content">
 
-  <!-- Credentials -->
-  <div class="card full-width" id="credsCard">
-    <div class="card-header">
-      <span class="card-title">API Credentials</span>
-      <button class="toggle-creds" onclick="toggleCreds()">hide</button>
-    </div>
-    <div id="credsForm">
-      <div class="field-row">
-        <div class="field">
-          <label>API Key ID</label>
-          <input type="text" id="apiKeyId" placeholder="00000000-0000-0000-0000-000000000000" />
+  <!-- PORTFOLIO TAB -->
+  <div class="tab-page active" id="page-portfolio">
+    <div class="card">
+      <div class="balance-grid">
+        <div class="balance-item">
+          <div class="balance-label">Portfolio Value</div>
+          <div class="balance-value" id="portfolioValue">--</div>
         </div>
-        <div class="field">
-          <label>Private Key (RSA PEM or API Secret)</label>
-          <input type="password" id="privateKey" placeholder="Paste your private key or API secret" />
+        <div class="balance-item">
+          <div class="balance-label">Available Cash</div>
+          <div class="balance-value" id="availableCash">--</div>
+        </div>
+        <div class="balance-item">
+          <div class="balance-label">Total P&L</div>
+          <div class="balance-value" id="totalPnl">--</div>
+        </div>
+        <div class="balance-item">
+          <div class="balance-label">Open Positions</div>
+          <div class="balance-value" id="positionCount">--</div>
         </div>
       </div>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <button class="btn btn-accent btn-small" id="saveCredsBtn" onclick="saveCreds()">Save credentials</button>
-        <button class="btn btn-small" onclick="testAuth()">Test connection</button>
-        <span id="authStatus" style="font-size:12px; color:var(--muted);"></span>
-      </div>
     </div>
-    <div id="credsSaved" style="display:none;" class="creds-saved">
-      <span>✓</span> Credentials loaded from storage
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Active Positions</span>
+        <button class="refresh-btn" onclick="loadPortfolio()" id="refreshPositions">&#8635;</button>
+      </div>
+      <div id="positionsList">
+        <div class="loading-spinner"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Add Order -->
-  <div class="card full-width">
-    <div class="card-header">
-      <span class="card-title">Add Order to Bundle</span>
-    </div>
+  <!-- TRADE TAB -->
+  <div class="tab-page" id="page-trade">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">New Order</span>
+      </div>
 
-    <div class="field-row four">
       <div class="field">
         <label>Market Ticker</label>
-        <input type="text" id="newTicker" placeholder="e.g. INXD-23DEC29-B4900" style="text-transform:uppercase;" />
+        <input type="text" id="tradeTicker" placeholder="e.g. INXD-26APR11-B5450" style="text-transform:uppercase;" autocapitalize="characters" autocorrect="off" />
       </div>
-      <div class="field">
-        <label>Side</label>
-        <select id="newSide">
-          <option value="yes">YES</option>
-          <option value="no">NO</option>
-        </select>
+
+      <div class="side-toggle" id="sideToggle">
+        <button class="side-toggle-btn active-yes" data-side="yes" id="sideYes">YES</button>
+        <button class="side-toggle-btn" data-side="no" id="sideNo">NO</button>
       </div>
-      <div class="field">
-        <label>Price (¢)</label>
-        <input type="number" id="newPrice" placeholder="50" min="1" max="99" step="1" />
-        <div class="price-note">1–99 cents per contract</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Price (cents)</label>
+          <input type="number" id="tradePrice" placeholder="50" min="1" max="99" step="1" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label>Contracts</label>
+          <input type="number" id="tradeCount" placeholder="10" min="1" step="1" inputmode="numeric" />
+        </div>
       </div>
-      <div class="field">
-        <label>Contracts</label>
-        <input type="number" id="newCount" placeholder="10" min="1" step="1" />
+
+      <div class="trade-cost" id="tradeCost">
+        Max Cost
+        <span class="cost-val" id="costVal">$0.00</span>
       </div>
+
+      <button class="btn-full" id="placeOrderBtn" onclick="confirmOrder()">Place Order</button>
     </div>
 
-    <button class="btn btn-accent" onclick="addOrder()">+ Add to bundle</button>
+    <!-- Quick bundle -->
+    <div class="card" id="bundleCard" style="display:none;">
+      <div class="card-header">
+        <span class="card-title">Order Bundle</span>
+        <button class="btn btn-small btn-danger" onclick="clearBundle()">Clear</button>
+      </div>
+      <div id="bundleList"></div>
+      <button class="btn-full" onclick="confirmFireBundle()" style="margin-top:12px;" id="fireBundleBtn">Fire All Orders</button>
+    </div>
   </div>
 
-  <!-- Bundle -->
-  <div class="card full-width">
-    <div class="card-header">
-      <span class="card-title">Order Bundle</span>
-      <button class="btn btn-small btn-danger" onclick="clearBundle()" id="clearBtn" style="display:none;">Clear all</button>
-    </div>
-
-    <div id="bundleSummary" class="summary-bar" style="display:none;">
-      <div class="summary-stat"><span>Orders:</span><span class="stat-val" id="statCount">0</span></div>
-      <div class="summary-stat"><span>Total contracts:</span><span class="stat-val" id="statContracts">0</span></div>
-      <div class="summary-stat"><span>Max cost:</span><span class="stat-val" id="statCost">$0.00</span></div>
-    </div>
-
-    <div id="orderList" class="order-list">
-      <div class="empty-state">
-        <div class="icon">📋</div>
-        No orders in bundle yet. Add some above.
+  <!-- ORDERS TAB -->
+  <div class="tab-page" id="page-orders">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Open Orders</span>
+        <button class="refresh-btn" onclick="loadOrders()" id="refreshOrders">&#8635;</button>
+      </div>
+      <div id="openOrdersList">
+        <div class="loading-spinner"></div>
       </div>
     </div>
 
-    <hr class="divider" id="fireDivider" style="display:none;">
-
-    <button class="btn-fire" id="fireBtn" style="display:none;" onclick="confirmFire()">
-      <span>⚡</span>
-      <span id="fireBtnText">Fire All Orders</span>
-    </button>
-  </div>
-
-  <!-- Log -->
-  <div class="card full-width" id="logCard" style="display:none;">
-    <div class="card-header">
-      <span class="card-title">Execution Log</span>
-      <button class="btn btn-small" onclick="clearLog()">Clear</button>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Recent Fills</span>
+      </div>
+      <div id="recentFillsList">
+        <div class="loading-spinner"></div>
+      </div>
     </div>
-    <div class="log-area" id="logArea"></div>
   </div>
 
 </div>
 
-<!-- Confirm Modal -->
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="portfolio">
+    <span class="tab-icon">&#9632;</span>
+    Portfolio
+  </button>
+  <button class="tab-btn" data-tab="trade">
+    <span class="tab-icon">&#9650;</span>
+    Trade
+  </button>
+  <button class="tab-btn" data-tab="orders">
+    <span class="tab-icon">&#9776;</span>
+    Orders
+  </button>
+</div>
+
+</div><!-- end appWrapper -->
+
+<!-- ─── CONFIRM MODAL ─── -->
 <div class="modal-overlay" id="confirmModal">
   <div class="modal">
-    <div class="modal-title">Confirm Order Bundle</div>
-    <div class="warn-box">⚠ These are live orders on Kalshi. Confirm before sending.</div>
-    <div class="confirm-list" id="confirmList"></div>
-    <div class="confirm-actions">
-      <button class="btn-fire" id="confirmFireBtn" onclick="fireOrders()" style="padding:10px 20px; font-size:13px; font-weight:600; width:auto; flex:1;">
-        Send All Orders
-      </button>
-      <button class="btn" onclick="closeModal()" style="padding:10px 20px;">Cancel</button>
+    <div class="modal-title" id="modalTitle">Confirm Order</div>
+    <div class="warn-box">This is a live order on Kalshi.</div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="btn-full" id="modalConfirmBtn" onclick="executeModalAction()">Confirm</button>
+      <button class="btn" onclick="closeModal()" style="padding:14px 24px;">Cancel</button>
     </div>
   </div>
 </div>
 
-<script>
-const KALSHI_API = 'https://trading-api.kalshi.com/trade-api/v2';
-let orders = [];
-let creds = { keyId: '', privateKey: '' };
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast"></div>
 
-async function loadFromStorage() {
-  // Load credentials from server (Railway env vars)
+<script>
+// ─── CONFIG ───
+const API = 'https://trading-api.kalshi.com/trade-api/v2';
+let creds = { keyId: '', privateKey: '' };
+let currentSide = 'yes';
+let modalAction = null;
+
+// ─── AUTH / API ───
+async function loadCreds() {
   try {
     const res = await fetch('/api/creds');
     const data = await res.json();
     if (data.keyId && data.privateKey) {
       creds = data;
-      document.getElementById('apiKeyId').value = data.keyId;
-      document.getElementById('privateKey').value = data.privateKey;
-      document.getElementById('credsSaved').style.display = 'flex';
-      document.getElementById('credsCard').style.display = 'none';
+      return true;
     }
-  } catch (e) {
-    // Fall back to localStorage if server unavailable
-    const saved = localStorage.getItem('kalshi_creds');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      creds = parsed;
-      document.getElementById('apiKeyId').value = parsed.keyId;
-      document.getElementById('privateKey').value = parsed.privateKey;
-      document.getElementById('credsSaved').style.display = 'flex';
-    }
+  } catch (e) {}
+  const saved = localStorage.getItem('kalshi_creds');
+  if (saved) {
+    creds = JSON.parse(saved);
+    return true;
   }
-  const savedOrders = localStorage.getItem('kalshi_bundle');
-  if (savedOrders) {
-    orders = JSON.parse(savedOrders);
-    renderOrders();
-  }
-}
-
-function saveCreds() {
-  const keyId = document.getElementById('apiKeyId').value.trim();
-  const pk = document.getElementById('privateKey').value.trim();
-  if (!keyId || !pk) { setAuthStatus('Enter both fields', 'error'); return; }
-  creds = { keyId, privateKey: pk };
-  localStorage.setItem('kalshi_creds', JSON.stringify(creds));
-  setAuthStatus('Saved', 'success');
-}
-
-function toggleCreds() {
-  const form = document.getElementById('credsForm');
-  const btn = document.querySelector('.toggle-creds');
-  const hidden = form.style.display === 'none';
-  form.style.display = hidden ? 'block' : 'none';
-  btn.textContent = hidden ? 'hide' : 'show';
-}
-
-function setAuthStatus(msg, type) {
-  const el = document.getElementById('authStatus');
-  el.textContent = msg;
-  el.style.color = type === 'success' ? 'var(--accent)' : type === 'error' ? 'var(--danger)' : 'var(--muted)';
-  setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 3000);
+  return false;
 }
 
 async function makeRequest(method, path, body = null) {
@@ -605,7 +886,7 @@ async function makeRequest(method, path, body = null) {
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
 
-  const res = await fetch(KALSHI_API + path, opts);
+  const res = await fetch(API + path, opts);
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || json.error || `HTTP ${res.status}`);
   return json;
@@ -613,7 +894,6 @@ async function makeRequest(method, path, body = null) {
 
 async function signMessage(msg) {
   const pk = creds.privateKey.trim();
-
   if (pk.includes('BEGIN') && pk.includes('PRIVATE KEY')) {
     return signWithPEM(pk, msg);
   }
@@ -642,217 +922,411 @@ function bytesToBase64(bytes) {
   return btoa(String.fromCharCode(...bytes));
 }
 
-async function testAuth() {
-  setAuthStatus('Testing...', 'info');
+// ─── PORTFOLIO ───
+async function loadPortfolio() {
+  const btn = document.getElementById('refreshPositions');
+  btn.classList.add('spinning');
   try {
-    await makeRequest('GET', '/portfolio/balance');
-    setAuthStatus('Connected ✓', 'success');
+    const [balanceData, positionsData] = await Promise.all([
+      makeRequest('GET', '/portfolio/balance'),
+      makeRequest('GET', '/portfolio/positions?settlement_status=unsettled&limit=200'),
+    ]);
+
+    const bal = balanceData.balance || balanceData;
+    const available = (bal.available_balance || bal.available_balance_cents || 0);
+    const portfolioVal = (bal.portfolio_value || bal.portfolio_value_cents || 0);
+    const totalBal = available + portfolioVal;
+
+    document.getElementById('headerBalance').textContent = '$' + (totalBal / 100).toFixed(2);
+    document.getElementById('availableCash').textContent = '$' + (available / 100).toFixed(2);
+    document.getElementById('portfolioValue').textContent = '$' + (portfolioVal / 100).toFixed(2);
+
+    const positions = positionsData.market_positions || positionsData.positions || [];
+    document.getElementById('positionCount').textContent = positions.length;
+
+    renderPositions(positions);
+    setStatus('connected');
   } catch (e) {
-    setAuthStatus('Failed: ' + e.message, 'error');
+    setStatus('disconnected');
+    document.getElementById('positionsList').innerHTML = `<div class="empty-state"><div class="empty-icon">&#9888;</div>Failed to load: ${e.message}</div>`;
   }
+  btn.classList.remove('spinning');
 }
 
-function addOrder() {
-  const ticker = document.getElementById('newTicker').value.trim().toUpperCase();
-  const side   = document.getElementById('newSide').value;
-  const price  = parseInt(document.getElementById('newPrice').value);
-  const count  = parseInt(document.getElementById('newCount').value);
+function renderPositions(positions) {
+  const el = document.getElementById('positionsList');
 
-  if (!ticker) { alert('Enter a market ticker'); return; }
-  if (!price || price < 1 || price > 99) { alert('Price must be 1–99 cents'); return; }
-  if (!count || count < 1) { alert('Enter at least 1 contract'); return; }
-
-  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-  orders.push({ id, ticker, side, price, count, status: 'pending', orderId: null, error: null });
-  localStorage.setItem('kalshi_bundle', JSON.stringify(orders));
-  renderOrders();
-
-  document.getElementById('newTicker').value = '';
-  document.getElementById('newPrice').value = '';
-  document.getElementById('newCount').value = '';
-  document.getElementById('newTicker').focus();
-}
-
-function removeOrder(id) {
-  orders = orders.filter(o => o.id !== id);
-  localStorage.setItem('kalshi_bundle', JSON.stringify(orders));
-  renderOrders();
-}
-
-function renderOrders() {
-  const list = document.getElementById('orderList');
-  const fireBtn = document.getElementById('fireBtn');
-  const fireDivider = document.getElementById('fireDivider');
-  const clearBtn = document.getElementById('clearBtn');
-  const summary = document.getElementById('bundleSummary');
-
-  if (orders.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div>No orders in bundle yet. Add some above.</div>';
-    fireBtn.style.display = 'none';
-    fireDivider.style.display = 'none';
-    clearBtn.style.display = 'none';
-    summary.style.display = 'none';
+  if (positions.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128203;</div>No active positions</div>';
+    document.getElementById('totalPnl').textContent = '$0.00';
     return;
   }
 
-  fireBtn.style.display = 'flex';
-  fireDivider.style.display = 'block';
-  clearBtn.style.display = 'inline-flex';
-  summary.style.display = 'flex';
+  let totalPnl = 0;
 
-  const totalContracts = orders.reduce((s, o) => s + o.count, 0);
-  const maxCost = orders.reduce((s, o) => s + (o.count * o.price / 100), 0);
-  document.getElementById('statCount').textContent = orders.length;
-  document.getElementById('statContracts').textContent = totalContracts;
-  document.getElementById('statCost').textContent = '$' + maxCost.toFixed(2);
+  el.innerHTML = positions.map(p => {
+    const qty = Math.abs(p.total_traded || p.position || 0);
+    const side = (p.total_traded || p.position || 0) > 0 ? 'yes' : (p.total_traded || p.position || 0) < 0 ? 'no' : 'yes';
+    const avgPrice = p.average_price || 0;
+    const currentValue = p.market_value || 0;
+    const cost = p.total_cost || (qty * avgPrice);
+    const pnl = p.realized_pnl !== undefined ? (p.realized_pnl + (currentValue - cost)) : (currentValue - cost);
+    totalPnl += pnl;
 
-  const statusIcon = { pending: '○', loading: '⟳', success: '✓', error: '✕' };
-  const statusColor = { pending: 'var(--muted)', loading: 'var(--warn)', success: 'var(--accent)', error: 'var(--danger)' };
+    const pnlColor = pnl >= 0 ? 'var(--accent)' : 'var(--danger)';
+    const pnlSign = pnl >= 0 ? '+' : '';
 
-  list.innerHTML = orders.map(o => `
-    <div class="order-item ${o.status}" id="oi-${o.id}">
-      <div>
+    return `
+      <div class="position-item">
+        <div class="position-top">
+          <div>
+            <span class="side-badge side-${side}">${side}</span>
+            <span class="position-ticker">${p.ticker || p.market_ticker || '—'}</span>
+          </div>
+          <div class="position-pnl" style="color:${pnlColor}">${pnlSign}$${(pnl / 100).toFixed(2)}</div>
+        </div>
+        <div class="position-details">
+          <div>Qty: <span>${qty}</span></div>
+          <div>Avg: <span>${avgPrice}¢</span></div>
+          <div>Value: <span>$${(currentValue / 100).toFixed(2)}</span></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const pnlEl = document.getElementById('totalPnl');
+  pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + (totalPnl / 100).toFixed(2);
+  pnlEl.className = 'balance-value ' + (totalPnl >= 0 ? 'positive' : 'negative');
+}
+
+// ─── ORDERS ───
+async function loadOrders() {
+  const btn = document.getElementById('refreshOrders');
+  btn.classList.add('spinning');
+  try {
+    const [openData, fillsData] = await Promise.all([
+      makeRequest('GET', '/portfolio/orders?status=resting&limit=100'),
+      makeRequest('GET', '/portfolio/fills?limit=50'),
+    ]);
+
+    const openOrders = openData.orders || [];
+    const fills = fillsData.fills || [];
+
+    renderOpenOrders(openOrders);
+    renderFills(fills);
+  } catch (e) {
+    document.getElementById('openOrdersList').innerHTML = `<div class="empty-state"><div class="empty-icon">&#9888;</div>${e.message}</div>`;
+    document.getElementById('recentFillsList').innerHTML = '';
+  }
+  btn.classList.remove('spinning');
+}
+
+function renderOpenOrders(orders) {
+  const el = document.getElementById('openOrdersList');
+  if (orders.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128196;</div>No open orders</div>';
+    return;
+  }
+  el.innerHTML = orders.map(o => `
+    <div class="order-item">
+      <div class="order-top">
         <div>
           <span class="side-badge side-${o.side}">${o.side}</span>
           <span class="order-ticker">${o.ticker}</span>
         </div>
-        <div class="order-meta">
-          ${o.count} contract${o.count > 1 ? 's' : ''} @ ${o.price}¢ — max cost $${(o.count * o.price / 100).toFixed(2)}
-          ${o.orderId ? `<span style="color:var(--accent)"> · ID: ${o.orderId}</span>` : ''}
-          ${o.error   ? `<span style="color:var(--danger)"> · ${o.error}</span>` : ''}
-        </div>
+        <span class="order-status resting">Open</span>
       </div>
-      <div class="order-actions">
-        <span class="status-icon" style="color:${statusColor[o.status]}">${statusIcon[o.status]}</span>
-        ${o.status === 'pending' ? `<button class="btn btn-small btn-danger" onclick="removeOrder('${o.id}')">✕</button>` : ''}
+      <div class="order-details">
+        <div>Qty: <span>${o.remaining_count || o.count || 0}</span></div>
+        <div>Price: <span>${o.yes_price || o.no_price || 0}¢</span></div>
+        <div>Type: <span>${o.type || 'limit'}</span></div>
+      </div>
+      <div class="order-actions-row">
+        <button class="btn btn-small btn-danger" onclick="confirmCancel('${o.order_id}', '${o.ticker}')">Cancel</button>
       </div>
     </div>
   `).join('');
 }
 
-function clearBundle() {
-  if (orders.some(o => o.status !== 'pending') && !confirm('Clear all orders including results?')) return;
-  orders = [];
-  localStorage.removeItem('kalshi_bundle');
-  renderOrders();
-}
-
-function confirmFire() {
-  if (!creds.keyId || !creds.privateKey) {
-    alert('Set your API credentials first.');
+function renderFills(fills) {
+  const el = document.getElementById('recentFillsList');
+  if (fills.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128200;</div>No recent fills</div>';
     return;
   }
-  const pending = orders.filter(o => o.status === 'pending');
-  if (pending.length === 0) { alert('No pending orders to fire.'); return; }
-
-  const list = document.getElementById('confirmList');
-  list.innerHTML = pending.map(o => `
-    <div class="confirm-row">
-      <div>
-        <span class="side-badge side-${o.side}">${o.side}</span>
-        <strong>${o.ticker}</strong>
+  el.innerHTML = fills.slice(0, 20).map(f => {
+    const time = new Date(f.created_time || f.ts).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+    return `
+      <div class="order-item">
+        <div class="order-top">
+          <div>
+            <span class="side-badge side-${f.side}">${f.side}</span>
+            <span class="order-ticker">${f.ticker}</span>
+          </div>
+          <span class="order-status executed">Filled</span>
+        </div>
+        <div class="order-details">
+          <div>Qty: <span>${f.count}</span></div>
+          <div>Price: <span>${f.yes_price || f.no_price || 0}¢</span></div>
+          <div><span style="color:var(--muted)">${time}</span></div>
+        </div>
       </div>
-      <div style="text-align:right; font-size:12px; color:var(--muted);">
-        ${o.count} × ${o.price}¢ = <strong style="color:var(--text)">$${(o.count * o.price / 100).toFixed(2)}</strong>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+}
 
+// ─── TRADE ───
+const tradeSide = { current: 'yes' };
+
+document.getElementById('sideToggle').addEventListener('click', e => {
+  const btn = e.target.closest('.side-toggle-btn');
+  if (!btn) return;
+  tradeSide.current = btn.dataset.side;
+  document.getElementById('sideYes').className = 'side-toggle-btn' + (tradeSide.current === 'yes' ? ' active-yes' : '');
+  document.getElementById('sideNo').className = 'side-toggle-btn' + (tradeSide.current === 'no' ? ' active-no' : '');
+  updateCost();
+});
+
+function updateCost() {
+  const price = parseInt(document.getElementById('tradePrice').value) || 0;
+  const count = parseInt(document.getElementById('tradeCount').value) || 0;
+  const cost = (price * count / 100).toFixed(2);
+  document.getElementById('costVal').textContent = '$' + cost;
+}
+
+document.getElementById('tradePrice').addEventListener('input', updateCost);
+document.getElementById('tradeCount').addEventListener('input', updateCost);
+
+function confirmOrder() {
+  const ticker = document.getElementById('tradeTicker').value.trim().toUpperCase();
+  const price = parseInt(document.getElementById('tradePrice').value);
+  const count = parseInt(document.getElementById('tradeCount').value);
+
+  if (!ticker) { toast('Enter a market ticker', 'error'); return; }
+  if (!price || price < 1 || price > 99) { toast('Price must be 1–99¢', 'error'); return; }
+  if (!count || count < 1) { toast('Enter at least 1 contract', 'error'); return; }
+
+  document.getElementById('modalTitle').textContent = 'Confirm Order';
+  document.getElementById('modalBody').innerHTML = `
+    <strong>${tradeSide.current.toUpperCase()}</strong> on <strong>${ticker}</strong><br>
+    ${count} contract${count > 1 ? 's' : ''} @ ${price}¢ each<br>
+    Max cost: <strong>$${(price * count / 100).toFixed(2)}</strong>
+  `;
+  document.getElementById('modalConfirmBtn').textContent = 'Place Order';
+  document.getElementById('modalConfirmBtn').className = 'btn-full';
+  modalAction = () => placeOrder(ticker, tradeSide.current, price, count);
   document.getElementById('confirmModal').classList.add('open');
+}
+
+async function placeOrder(ticker, side, price, count) {
+  closeModal();
+  const btn = document.getElementById('placeOrderBtn');
+  btn.disabled = true;
+  btn.textContent = 'Placing...';
+
+  try {
+    const body = {
+      ticker,
+      action: 'buy',
+      type: 'limit',
+      side,
+      count,
+    };
+    if (side === 'yes') body.yes_price = price;
+    else body.no_price = price;
+
+    const res = await makeRequest('POST', '/portfolio/orders', body);
+    const orderId = res.order?.order_id || res.order_id || '';
+    toast('Order placed' + (orderId ? ' — ' + orderId.slice(0, 8) : ''), 'success');
+
+    document.getElementById('tradeTicker').value = '';
+    document.getElementById('tradePrice').value = '';
+    document.getElementById('tradeCount').value = '';
+    updateCost();
+
+    loadPortfolio();
+    loadOrders();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Place Order';
+}
+
+function confirmCancel(orderId, ticker) {
+  document.getElementById('modalTitle').textContent = 'Cancel Order';
+  document.getElementById('modalBody').innerHTML = `Cancel open order on <strong>${ticker}</strong>?`;
+  document.getElementById('modalConfirmBtn').textContent = 'Cancel Order';
+  document.getElementById('modalConfirmBtn').className = 'btn-full sell';
+  modalAction = () => cancelOrder(orderId);
+  document.getElementById('confirmModal').classList.add('open');
+}
+
+async function cancelOrder(orderId) {
+  closeModal();
+  try {
+    await makeRequest('DELETE', `/portfolio/orders/${orderId}`);
+    toast('Order cancelled', 'success');
+    loadOrders();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'error');
+  }
+}
+
+function executeModalAction() {
+  if (modalAction) modalAction();
+  modalAction = null;
 }
 
 function closeModal() {
   document.getElementById('confirmModal').classList.remove('open');
 }
 
-async function fireOrders() {
-  closeModal();
-  const pending = orders.filter(o => o.status === 'pending');
-  if (pending.length === 0) return;
+// ─── BUNDLE (kept for power users) ───
+let bundle = [];
 
-  document.getElementById('logCard').style.display = 'block';
-  const fireBtn = document.getElementById('fireBtn');
-  const fireBtnText = document.getElementById('fireBtnText');
-  fireBtn.disabled = true;
-  fireBtn.classList.add('firing');
-  fireBtnText.textContent = `Firing ${pending.length} orders...`;
+function addToBundle() {
+  const ticker = document.getElementById('tradeTicker').value.trim().toUpperCase();
+  const price = parseInt(document.getElementById('tradePrice').value);
+  const count = parseInt(document.getElementById('tradeCount').value);
 
-  log(`Firing ${pending.length} orders simultaneously`, 'info');
+  if (!ticker || !price || !count) return;
 
-  const promises = pending.map(o => placeOrder(o));
-  const results = await Promise.allSettled(promises);
-
-  const succeeded = results.filter(r => r.status === 'fulfilled' && r.value?.ok).length;
-  const failed    = results.length - succeeded;
-
-  log(`Done — ${succeeded} succeeded, ${failed} failed`, succeeded === results.length ? 'success' : 'warn');
-
-  fireBtn.disabled = false;
-  fireBtn.classList.remove('firing');
-  fireBtnText.textContent = 'Fire All Orders';
-  renderOrders();
+  bundle.push({ id: Date.now().toString(36), ticker, side: tradeSide.current, price, count, status: 'pending' });
+  localStorage.setItem('kalshi_bundle', JSON.stringify(bundle));
+  renderBundle();
 }
 
-async function placeOrder(order) {
-  order.status = 'loading';
-  renderOrders();
+function clearBundle() {
+  bundle = [];
+  localStorage.removeItem('kalshi_bundle');
+  renderBundle();
+}
 
-  try {
-    log(`→ ${order.side.toUpperCase()} ${order.ticker} ${order.count}@${order.price}¢`, 'info');
+function renderBundle() {
+  const card = document.getElementById('bundleCard');
+  if (bundle.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  document.getElementById('bundleList').innerHTML = bundle.map(o => `
+    <div class="order-item" style="margin-bottom:6px;">
+      <div class="order-top">
+        <div>
+          <span class="side-badge side-${o.side}">${o.side}</span>
+          <span class="order-ticker">${o.ticker}</span>
+        </div>
+        <span style="font-size:12px;color:var(--muted)">${o.count} @ ${o.price}¢</span>
+      </div>
+    </div>
+  `).join('');
+}
 
-    const body = {
-      ticker: order.ticker,
-      action: 'buy',
-      type: 'limit',
-      side: order.side,
-      count: order.count,
-      yes_price: order.side === 'yes' ? order.price : undefined,
-      no_price:  order.side === 'no'  ? order.price : undefined,
-      client_order_id: 'kol-' + order.id,
-    };
+// ─── TABS ───
+document.querySelector('.tab-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
 
-    if (body.yes_price === undefined) delete body.yes_price;
-    if (body.no_price  === undefined) delete body.no_price;
+  if (tab === 'portfolio') loadPortfolio();
+  if (tab === 'orders') loadOrders();
+});
 
-    const res = await makeRequest('POST', '/portfolio/orders', body);
-    order.status = 'success';
-    order.orderId = res.order?.order_id || res.order_id || '–';
-    log(`✓ ${order.ticker} → ${order.orderId}`, 'success');
-    return { ok: true };
-  } catch (e) {
-    order.status = 'error';
-    order.error = e.message;
-    log(`✕ ${order.ticker}: ${e.message}`, 'error');
-    return { ok: false };
+// ─── HELPERS ───
+function setStatus(s) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'logo-dot' + (s === 'connected' ? '' : s === 'connecting' ? ' connecting' : ' disconnected');
+}
+
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  setTimeout(() => { el.className = 'toast'; }, 3000);
+}
+</script>
+
+<!-- ─── PASSCODE ─── -->
+<script>
+const APP_PASSCODE = '326437';
+let passcodeEntry = '';
+const dots = document.querySelectorAll('#passcodeDots .passcode-dot');
+const dotsContainer = document.getElementById('passcodeDots');
+
+function updateDots() {
+  dots.forEach((dot, i) => dot.classList.toggle('filled', i < passcodeEntry.length));
+}
+
+function checkPasscode() {
+  if (passcodeEntry === APP_PASSCODE) {
+    sessionStorage.setItem('kol_auth', '1');
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('appWrapper').style.display = 'flex';
+    initApp();
+  } else {
+    dotsContainer.classList.add('error');
+    setTimeout(() => {
+      passcodeEntry = '';
+      dotsContainer.classList.remove('error');
+      updateDots();
+    }, 500);
   }
 }
 
-function log(msg, type = 'info') {
-  const area = document.getElementById('logArea');
-  const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-  const line = document.createElement('span');
-  line.className = `log-line log-${type}`;
-  line.textContent = `[${ts}] ${msg}`;
-  area.appendChild(line);
-  area.appendChild(document.createElement('br'));
-  area.scrollTop = area.scrollHeight;
+document.getElementById('numpad').addEventListener('click', e => {
+  const btn = e.target.closest('.numpad-btn');
+  if (!btn || btn.classList.contains('empty')) return;
+  if (btn.classList.contains('delete')) {
+    passcodeEntry = passcodeEntry.slice(0, -1);
+    updateDots();
+    return;
+  }
+  const key = btn.dataset.key;
+  if (key && passcodeEntry.length < APP_PASSCODE.length) {
+    passcodeEntry += key;
+    updateDots();
+    if (passcodeEntry.length === APP_PASSCODE.length) setTimeout(checkPasscode, 150);
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lockScreen').style.display === 'none') return;
+  if (e.key >= '0' && e.key <= '9' && passcodeEntry.length < APP_PASSCODE.length) {
+    passcodeEntry += e.key;
+    updateDots();
+    if (passcodeEntry.length === APP_PASSCODE.length) setTimeout(checkPasscode, 150);
+  } else if (e.key === 'Backspace') {
+    passcodeEntry = passcodeEntry.slice(0, -1);
+    updateDots();
+  }
+});
+
+async function initApp() {
+  setStatus('connecting');
+  const hasCreds = await loadCreds();
+  if (hasCreds) {
+    loadPortfolio();
+    loadOrders();
+  } else {
+    setStatus('disconnected');
+    toast('No API credentials configured', 'error');
+  }
 }
 
-function clearLog() {
-  document.getElementById('logArea').innerHTML = '';
+// Resume session
+if (sessionStorage.getItem('kol_auth') === '1') {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('appWrapper').style.display = 'flex';
+  initApp();
 }
 
-document.getElementById('newTicker').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('newPrice').focus();
-});
-document.getElementById('newPrice').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('newCount').focus();
-});
-document.getElementById('newCount').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addOrder();
-});
-
-loadFromStorage();
+// PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 </script>
 </body>
 </html>
