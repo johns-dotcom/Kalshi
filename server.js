@@ -17,13 +17,20 @@ const MIME = {
 
 function signRequest(method, fullPath, timestamp) {
   const pk = PRIVATE_KEY.trim();
-  // Kalshi signature format: timestamp + method + path (no body)
-  const message = timestamp + method.toUpperCase() + fullPath;
+  // Strip query params for signing — Kalshi signs path only
+  const pathOnly = fullPath.split('?')[0];
+  // Kalshi signature format: timestamp (ms) + method + path
+  const message = timestamp + method.toUpperCase() + pathOnly;
 
   if (pk.includes('BEGIN') && pk.includes('PRIVATE KEY')) {
+    // RSA-PSS with SHA-256 (required by Kalshi)
     const sign = crypto.createSign('RSA-SHA256');
     sign.update(message);
-    return sign.sign(pk, 'base64');
+    return sign.sign({
+      key: pk,
+      padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+      saltLength: crypto.constants.RSA_PSS_SALTLEN_DIGEST,
+    }, 'base64');
   } else {
     const keyBytes = Buffer.from(pk, 'base64');
     const hmac = crypto.createHmac('sha256', keyBytes);
@@ -39,7 +46,7 @@ function proxyToKalshi(req, res, apiPath, method) {
     return;
   }
 
-  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const timestamp = Date.now().toString();
   const signature = signRequest(method, apiPath, timestamp);
 
   const url = new URL(KALSHI_BASE + apiPath);
