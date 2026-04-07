@@ -294,19 +294,10 @@
   .dock-btn:active { background: #222; }
   .dock-btn.has-orders { background: var(--green); color: #000; border-color: var(--green); }
 
-  /* ─── TRADE PANEL ─── */
-  .trade-panel {
-    display: none; position: fixed; inset: 0;
-    background: var(--bg); z-index: 250;
-    flex-direction: column;
-  }
-
-  .trade-panel.open { display: flex; }
-
-  .trade-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 16px; border-bottom: 1px solid var(--border);
-  }
+  /* ─── TRADE VIEW ─── */
+  .trade-panel { display: none; }
+  .trade-panel.open { display: block; }
+  .trade-panel .section-header { padding-top: 14px; }
 
   .trade-close {
     background: none; border: none; color: var(--dim);
@@ -500,6 +491,39 @@
       <div class="section-header" style="margin-top:8px;"><span>Recent Fills</span></div>
       <div id="fillsList"></div>
     </div>
+
+    <!-- Trade view -->
+    <div class="trade-panel" id="tradePanel">
+      <div class="section-header"><span>New Order</span></div>
+      <div style="padding:0 16px;">
+        <div class="trade-field">
+          <div class="trade-label">Ticker</div>
+          <input class="trade-input" type="text" id="tTicker" placeholder="TICKER" autocapitalize="characters" autocorrect="off" />
+        </div>
+        <div class="trade-field">
+          <div class="trade-label">Side</div>
+          <div class="side-btns">
+            <button class="side-btn sel-yes" id="btnYes" onclick="setSide('yes')">YES</button>
+            <button class="side-btn" id="btnNo" onclick="setSide('no')">NO</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="trade-field">
+            <div class="trade-label">Price (cents)</div>
+            <input class="trade-input" type="number" id="tPrice" placeholder="50" min="1" max="99" inputmode="numeric" />
+          </div>
+          <div class="trade-field">
+            <div class="trade-label">Contracts</div>
+            <input class="trade-input" type="number" id="tQty" placeholder="10" min="1" inputmode="numeric" />
+          </div>
+        </div>
+        <div class="trade-cost-row">
+          <div class="trade-cost-label">Max Cost</div>
+          <div class="trade-cost-val" id="tCost">$0.00</div>
+        </div>
+        <button class="trade-submit" id="tSubmit" onclick="submitOrder()">Place Order</button>
+      </div>
+    </div>
   </div>
 
   <!-- DOCK -->
@@ -536,42 +560,6 @@
     <button class="drawer-item" onclick="loadPortfolio();closeDrawer();">
       <span class="icon">&#8635;</span> Refresh
     </button>
-  </div>
-</div>
-
-<!-- TRADE PANEL -->
-<div class="trade-panel" id="tradePanel">
-  <div class="trade-header">
-    <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">New Order</span>
-    <button class="trade-close" onclick="closeTrade()">&times;</button>
-  </div>
-  <div class="trade-body">
-    <div class="trade-field">
-      <div class="trade-label">Ticker</div>
-      <input class="trade-input" type="text" id="tTicker" placeholder="TICKER" autocapitalize="characters" autocorrect="off" />
-    </div>
-    <div class="trade-field">
-      <div class="trade-label">Side</div>
-      <div class="side-btns">
-        <button class="side-btn sel-yes" id="btnYes" onclick="setSide('yes')">YES</button>
-        <button class="side-btn" id="btnNo" onclick="setSide('no')">NO</button>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="trade-field">
-        <div class="trade-label">Price (cents)</div>
-        <input class="trade-input" type="number" id="tPrice" placeholder="50" min="1" max="99" inputmode="numeric" />
-      </div>
-      <div class="trade-field">
-        <div class="trade-label">Contracts</div>
-        <input class="trade-input" type="number" id="tQty" placeholder="10" min="1" inputmode="numeric" />
-      </div>
-    </div>
-    <div class="trade-cost-row">
-      <div class="trade-cost-label">Max Cost</div>
-      <div class="trade-cost-val" id="tCost">$0.00</div>
-    </div>
-    <button class="trade-submit" id="tSubmit" onclick="submitOrder()">Place Order</button>
   </div>
 </div>
 
@@ -745,8 +733,8 @@ async function cancelOrder(id, ticker) {
 }
 
 // ─── TRADE ───
-function openTrade() { document.getElementById('tradePanel').classList.add('open'); }
-function closeTrade() { document.getElementById('tradePanel').classList.remove('open'); }
+function openTrade() { showView('trade'); }
+function closeTrade() { showView('positions'); }
 
 function setSide(s) {
   tradeSide = s;
@@ -809,6 +797,8 @@ function submitOrder() {
 function showView(v) {
   document.getElementById('view-positions').style.display = v === 'positions' ? 'block' : 'none';
   document.getElementById('view-orders').style.display = v === 'orders' ? 'block' : 'none';
+  const tp = document.getElementById('tradePanel');
+  if (v === 'trade') tp.classList.add('open'); else tp.classList.remove('open');
   document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
   if (v === 'orders') loadOrders();
   if (v === 'positions') loadPortfolio();
