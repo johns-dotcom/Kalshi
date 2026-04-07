@@ -130,6 +130,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Debug: raw API response viewer
+  if (parsedUrl.pathname === '/api/debug') {
+    const target = parsedUrl.searchParams.get('path') || '/portfolio/balance';
+    const apiPath = '/trade-api/v2' + target;
+    const timestamp = Date.now().toString();
+    const pathOnly = apiPath.split('?')[0];
+    const message = timestamp + 'GET' + pathOnly;
+    const pk = PRIVATE_KEY.trim();
+    let signature;
+    if (pk.includes('BEGIN')) {
+      const sign = crypto.createSign('RSA-SHA256');
+      sign.update(message);
+      signature = sign.sign({ key: pk, padding: crypto.constants.RSA_PKCS1_PSS_PADDING, saltLength: crypto.constants.RSA_PSS_SALTLEN_DIGEST }, 'base64');
+    }
+    const url = new URL(KALSHI_BASE + apiPath);
+    const opts = {
+      hostname: url.hostname, port: 443, path: url.pathname + url.search, method: 'GET',
+      headers: { 'Content-Type': 'application/json', 'KALSHI-ACCESS-KEY': KEY_ID, 'KALSHI-ACCESS-TIMESTAMP': timestamp, 'KALSHI-ACCESS-SIGNATURE': signature }
+    };
+    const proxy = https.request(opts, (pr) => {
+      let body = '';
+      pr.on('data', c => body += c);
+      pr.on('end', () => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(body); });
+    });
+    proxy.on('error', e => { res.writeHead(500); res.end(e.message); });
+    proxy.end();
+    return;
+  }
+
   // Proxy Kalshi API: /kalshi/... -> trading-api.kalshi.com/trade-api/v2/...
   if (parsedUrl.pathname.startsWith('/kalshi/')) {
     const apiPath = '/trade-api/v2' + parsedUrl.pathname.replace('/kalshi', '') + parsedUrl.search;
