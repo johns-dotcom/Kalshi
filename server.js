@@ -130,9 +130,17 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Debug: raw API response viewer
-  if (parsedUrl.pathname === '/api/debug') {
-    const target = parsedUrl.searchParams.get('path') || '/portfolio/balance';
+  // Debug: raw API response for specific endpoints
+  if (parsedUrl.pathname.startsWith('/api/debug/')) {
+    const routes = {
+      'balance': '/portfolio/balance',
+      'positions': '/portfolio/positions?settlement_status=unsettled&limit=5',
+      'orders': '/portfolio/orders?status=resting&limit=5',
+      'fills': '/portfolio/fills?limit=5',
+    };
+    const key = parsedUrl.pathname.replace('/api/debug/', '');
+    const target = routes[key];
+    if (!target) { res.writeHead(404); res.end('Use: /api/debug/balance, /api/debug/positions, /api/debug/orders, /api/debug/fills'); return; }
     const apiPath = '/trade-api/v2' + target;
     const timestamp = Date.now().toString();
     const pathOnly = apiPath.split('?')[0];
